@@ -61,6 +61,7 @@ func (t *PostsServiceImpl) FindAll() []response.PostResponse {
 			Title:       value.Title,
 			Description: value.Description,
 			Status:      value.Status,
+			CreatedAt:   value.CreatedAt,
 		}
 		tags = append(tags, tag)
 	}

@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	interfaces "gin_test/bulletin_board/dao/user"
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/helper"
-	interfaces "gin_test/bulletin_board/dao/user"
 	"gin_test/bulletin_board/model"
 	"gin_test/bulletin_board/utils"
 
@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/joho/godotenv"
 )
 
 type AuthServiceImpl struct {
@@ -37,8 +36,6 @@ func (auth *AuthServiceImpl) FindByEmail(email string) model.User {
 
 // Login implements Authservice
 func (auth *AuthServiceImpl) Login(users request.LoginRequest) (string, error) {
-	err := godotenv.Load(".env")
-	helper.ErrorPanic(err)
 	tokenExpireInStr := os.Getenv("TOKEN_EXPIRED_IN")
 	tokenSecret := os.Getenv("TOKEN_SECRET")
 
