@@ -1,0 +1,19 @@
+{{define "create.html"}}
+<html>
+    {{ template "header.html" }}
+    <body>
+        {{template "common_header.html"}}
+        <h2>Create</h2>
+        <form action="/posts/" method="post" class="createForm">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required>
+            <textarea name="description" id="description" cols="30" rows="10"></textarea>
+            {{ with .Errors.Name }}
+            <p class="error">{{ . }}</p>
+            {{ end }}
+            <button type="submit">Create</button>
+        </form>
+        {{ template "footer.html" }}
+    </body>
+</html>
+{{end}}

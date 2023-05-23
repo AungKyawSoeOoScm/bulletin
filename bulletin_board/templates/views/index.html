@@ -1,0 +1,72 @@
+{{define "index.html"}}
+<html>
+    {{ template "header.html" }}
+    <body>
+        {{template "common_header.html"}}
+        <script>
+            function sendDelete(event,href) {
+                var xttp=new XMLHttpRequest();
+                event.preventDefault();
+                xttp.onreadystatechange=function(){
+                    // return if not ready state ->4
+                    if(this.readyState!==4){
+                        return;
+                    }
+                    if(this.readyState===4){
+                        // Redirect the page
+                        window.location.replace(this.responseURL);
+                    }
+                }
+                xttp.open("DELETE",href,true);
+                xttp.send();
+              }
+        </script>
+        <a href="posts/create/">Create post</a>
+        <table class="table table-striped bs-table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Posted User</th>
+                    <th scope="col">Posted Date</th>
+                    <th scope="col">Operation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .tags}}
+                <tr>
+                    <th scope="row">{{.Id}}</th>
+                    <td>{{.Title}}</td>
+                    <td>{{.Description}}</td>
+                    <td>#</td>
+                    <td></td>
+                    <td>
+                        <a class="btn btn-primary" href="/posts/update/{{.Id}}">Edit</a>
+                        <a class="btn btn-danger" href="/posts/{{.Id}}"
+                            onclick="sendDelete(event,this.href)">Delete</a>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{range .tags}}
+
+        <p class="pra">
+            <span class="tags">Title: {{.Title}}</span>
+            <h4>Description: {{.Description}}</h4>
+            <h4>{{.Status}}</h4>
+            <a class="edit" href="/posts/update/{{.Id}}">Edit</a>
+            <!-- <form action="/api/tags/{{.Id}}" method="post">
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit">Delete</button>
+            </form> -->
+            <a class="delete" href="/posts/{{.Id}}"
+                onclick="sendDelete(event,this.href)">Delete</a>
+
+        </p>
+        {{end}}
+        {{ template "footer.html" }}
+    </body>
+</html>
+{{end}}

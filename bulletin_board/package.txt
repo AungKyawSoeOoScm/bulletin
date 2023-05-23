@@ -1,0 +1,6 @@
+github.com/rs/zerolog/log
+github.com/go-playground/validator/v10
+github.com/joho/godotenv
+
+
+go run migrate/migrate.go (to first migrate table)
