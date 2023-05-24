@@ -63,6 +63,7 @@ func TagsRouter(router *gin.RouterGroup, PostsController *controller.PostControl
 	tagRouter := router.Group("/posts")
 	{
 		tagRouter.GET("/create", PostsController.CreateForm)
+		// tagRouter.GET("/createConfirm", PostsController.CreateConfirmForm)
 		tagRouter.GET("/update/:tagId", PostsController.UpdateForm)
 		tagRouter.GET("", middlewares.IsAuth(userInterface), PostsController.FindAll)
 		tagRouter.GET("/:tagId", middlewares.IsAuth(userInterface), PostsController.FindById)

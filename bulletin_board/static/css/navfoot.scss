@@ -1,15 +1,18 @@
 .nav-bg {
     padding: 15px 5px !important;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    position: fixed;
+    top: 0;
 
     .container-fluid {
         .navbar-brand {
-            color: #ffffff;
+            color: #000000;
         }
 
         .navbar-nav {
             .nav-item {
                 .nav-link {
-                    color: #ffffff;
+                    color: #000000;
                     font-size: 18px;
                 }
 
@@ -20,9 +23,15 @@
 
     }
 
-    background-color: #5D89A2;
+    background-color: #ffffff;
 
 
 
 
+}
+
+.foot-bg {
+    box-shadow: -3px -15px 11px 2px rgba(255, 255, 255, 0.71);
+    -webkit-box-shadow: -3px -15px 11px 2px rgba(241, 234, 234, 0.71);
+    -moz-box-shadow: -3px -15px 11px 2px rgba(241, 234, 234, 0.71);
 }

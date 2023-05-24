@@ -2,7 +2,6 @@ package interfaces
 
 import (
 	"errors"
-	"fmt"
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/helper"
 	"gin_test/bulletin_board/model"
@@ -54,14 +53,17 @@ func (t *PostsRepositoryImpl) Save(tags model.Posts) error {
 }
 
 // Update implements TagsRepository
-func (t *PostsRepositoryImpl) Update(posts model.Posts) {
+func (t *PostsRepositoryImpl) Update(posts model.Posts) error {
 	var updateTag = request.UpdatePostsRequest{
 		Id:          posts.Id,
 		Title:       posts.Title,
 		Description: posts.Description,
-		Status:      posts.Status,
+		Status:      &posts.Status,
 	}
-	fmt.Println("dkjakkk")
 	result := t.Db.Model(&posts).Updates(updateTag)
-	helper.ErrorPanic(result.Error)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+	// helper.ErrorPanic(result.Error)
 }

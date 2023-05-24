@@ -7,7 +7,7 @@ import (
 
 type PostsService interface {
 	Create(tags request.CreatePostsRequest, userId int) error
-	Update(tags request.UpdatePostsRequest)
+	Update(tags request.UpdatePostsRequest) error
 	Delete(tagsId int)
 	FindById(tagsId int) response.PostResponse
 	FindAll() []response.PostResponse

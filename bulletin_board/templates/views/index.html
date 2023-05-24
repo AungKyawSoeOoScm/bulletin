@@ -21,7 +21,7 @@
                 xttp.send();
               }
         </script>
-        <a href="posts/create/">Create post</a>
+        <a href="posts/create/" class="btn btn-primary mt-3 ml-3">Create post</a>
         <div class="container-fluid">
             <table class="table table-striped  .table-responsive  bs-table">
                 <thead>
@@ -35,12 +35,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{range .tags}}
+                    {{range $index, $tag:=.tags}}
                     <tr>
-                        <th scope="row">{{.Id}}</th>
+                        <th scope="row">{{$index}}</th>
                         <td>{{.Title}}</td>
                         <td>{{.Description}}</td>
-                        <td>#</td>
+                        <td>{{.CreateUserId}}</td>
                         <td>{{.CreatedAt.Format "2006-01-02"}}</td>
                         <td>
                             <a class="btn btn-outline-primary"
@@ -54,23 +54,6 @@
                 </tbody>
             </table>
         </div>
-
-        {{range .tags}}
-
-        <p class="pra">
-            <span class="tags">Title: {{.Title}}</span>
-            <h4>Description: {{.Description}}</h4>
-            <h4>{{.Status}}</h4>
-            <a class="edit" href="/posts/update/{{.Id}}">Edit</a>
-            <!-- <form action="/api/tags/{{.Id}}" method="post">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit">Delete</button>
-            </form> -->
-            <a class="delete" href="/posts/{{.Id}}"
-                onclick="sendDelete(event,this.href)">Delete</a>
-
-        </p>
-        {{end}}
         {{ template "footer.html" }}
     </body>
 </html>

@@ -28,12 +28,15 @@ func NewPostsController(service service.PostsService) *PostController {
 func (controller *PostController) Create(ctx *gin.Context, userId int) {
 	title := ctx.PostForm("title")
 	description := ctx.PostForm("description")
+
 	createTagsRequest := request.CreatePostsRequest{
 		Title:       title,
 		Description: description,
 		UserId:      userId,
 	}
 	fmt.Print(userId)
+	fmt.Print(createTagsRequest)
+	// ctx.HTML(http.StatusOK, "createConfirm.html", gin.H{})
 	err := controller.tagsService.Create(createTagsRequest, userId)
 	if err != nil {
 		if validationErr, ok := err.(validator.ValidationErrors); ok {
@@ -43,18 +46,17 @@ func (controller *PostController) Create(ctx *gin.Context, userId int) {
 				errorMessage := ""
 				switch fieldErr.Tag() {
 				case "required":
-					errorMessage = "Field is required"
+					errorMessage = fieldName + " field is required"
 				case "min":
-					errorMessage = fmt.Sprintf("Field must be at least %s characters long", fieldErr.Param())
+					errorMessage = fieldName + " must be at least " + fieldErr.Param() + " characters long"
 				case "max":
-					errorMessage = fmt.Sprintf("Field must not exceed %s characters", fieldErr.Param())
+					errorMessage = fieldName + " must not exceed " + fieldErr.Param() + " characters"
 				default:
 					errorMessage = "Field validation failed"
 				}
 				errorMessages[fieldName] = errorMessage
-
 			}
-			fmt.Println(errorMessages)
+
 			ctx.HTML(http.StatusBadRequest, "create.html", gin.H{
 				"Errors": errorMessages,
 			})
@@ -62,15 +64,18 @@ func (controller *PostController) Create(ctx *gin.Context, userId int) {
 		}
 	} else {
 		ctx.Redirect(http.StatusFound, "/posts")
+
 	}
 }
 
 // update controller
+
 func (controller *PostController) Update(ctx *gin.Context) {
 	tagId := ctx.Param("tagId")
 	title := ctx.PostForm("title")
 	description := ctx.PostForm("description")
 	statusValue := ctx.PostForm("status")
+	fmt.Print(statusValue, "staVa")
 	fmt.Println(tagId)
 	id, err := strconv.Atoi(tagId)
 	helper.ErrorPanic(err)
@@ -81,10 +86,13 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		Id:          id,
 		Title:       title,
 		Description: description,
-		Status:      2,
 	}
 	if statusValue == "on" {
-		updateTagsRequest.Status = 1
+		status := 1
+		updateTagsRequest.Status = &status
+	} else {
+		status := 0
+		updateTagsRequest.Status = &status
 	}
 	fmt.Println(updateTagsRequest)
 	if err := ctx.ShouldBind(&updateTagsRequest); err != nil {
@@ -94,8 +102,35 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		})
 		return
 	}
-	controller.tagsService.Update(updateTagsRequest)
-	ctx.Redirect(http.StatusFound, "/posts")
+
+	uerr := controller.tagsService.Update(updateTagsRequest)
+	if uerr != nil {
+		if validationErr, ok := uerr.(validator.ValidationErrors); ok {
+			errorMessages := make(map[string]string)
+			for _, fieldErr := range validationErr {
+				fieldName := fieldErr.Field()
+				errorMessage := ""
+				switch fieldErr.Tag() {
+				case "required":
+					errorMessage = fieldName + " field is required"
+				case "min":
+					errorMessage = fieldName + " must be at least " + fieldErr.Param() + " characters long"
+				case "max":
+					errorMessage = fieldName + " must not exceed " + fieldErr.Param() + " characters"
+				default:
+					errorMessage = "Field validation failed"
+				}
+				errorMessages[fieldName] = errorMessage
+			}
+
+			ctx.HTML(http.StatusBadRequest, "update.html", gin.H{
+				"Errors": errorMessages,
+			})
+			return
+		}
+	} else {
+		ctx.Redirect(http.StatusFound, "/posts")
+	}
 }
 
 // delete controller
@@ -126,12 +161,12 @@ func (controller *PostController) FindById(ctx *gin.Context) {
 // findAll controller
 func (controller *PostController) FindAll(ctx *gin.Context) {
 	cookie, err := ctx.Request.Cookie("token")
-	fmt.Println(cookie)
 	if err != nil || cookie.Value == "" {
 		fmt.Print("No token")
 		return
 	}
 	tagResponse := controller.tagsService.FindAll()
+	// userName:=controller.tagsService.FindById(1)
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
 		"tags": tagResponse,
 	})

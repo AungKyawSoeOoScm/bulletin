@@ -57,11 +57,12 @@ func (t *PostsServiceImpl) FindAll() []response.PostResponse {
 	var tags []response.PostResponse
 	for _, value := range result {
 		tag := response.PostResponse{
-			Id:          value.Id,
-			Title:       value.Title,
-			Description: value.Description,
-			Status:      value.Status,
-			CreatedAt:   value.CreatedAt,
+			Id:           value.Id,
+			Title:        value.Title,
+			Description:  value.Description,
+			Status:       value.Status,
+			CreatedAt:    value.CreatedAt,
+			CreateUserId: value.CreateUserId,
 		}
 		tags = append(tags, tag)
 	}
@@ -82,11 +83,16 @@ func (t *PostsServiceImpl) FindById(tagsId int) response.PostResponse {
 }
 
 // Update implements TagsService
-func (t *PostsServiceImpl) Update(posts request.UpdatePostsRequest) {
+func (t *PostsServiceImpl) Update(posts request.UpdatePostsRequest) error {
 	postData, err := t.postsInterface.FindById(posts.Id)
 	helper.ErrorPanic(err)
 	postData.Title = posts.Title
 	postData.Description = posts.Description
-	postData.Status = posts.Status
-	t.postsInterface.Update(postData)
+	postData.Status = *posts.Status
+	uerr := t.postsInterface.Update(postData)
+	if uerr != nil {
+		return err
+	}
+
+	return nil
 }

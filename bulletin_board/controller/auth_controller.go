@@ -79,6 +79,7 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 		Name:     "token",
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour), // Set cookie expiration time
+		MaxAge:   3600,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Set to true if using HTTPS
