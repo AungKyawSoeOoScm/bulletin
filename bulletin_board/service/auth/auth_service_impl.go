@@ -65,9 +65,14 @@ func (auth *AuthServiceImpl) Register(users request.CreateUserRequest) {
 	helper.ErrorPanic(err)
 
 	newUser := model.User{
-		Username: users.Username,
-		Email:    users.Email,
-		Password: hashedPassword,
+		Username:      users.Username,
+		Email:         users.Email,
+		Password:      hashedPassword,
+		Phone:         users.Phone,
+		Address:       users.Address,
+		Date_Of_Birth: users.Date_Of_Birth,
+		Type:          users.Type,
 	}
+	fmt.Print(newUser)
 	auth.UsersInterface.Save(newUser)
 }

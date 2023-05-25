@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"errors"
+	"fmt"
 
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/helper"
@@ -20,9 +21,17 @@ func NewUsersInterfaceImpl(Db *gorm.DB) UsersInterface {
 
 // Delete implements UsersInterface
 func (user *UsersInterfaceImpl) Delete(userId int) {
+
+	var postModel model.Posts
+	presult := user.Db.Where("create_user_id = ?", userId).Delete(&postModel)
+	helper.ErrorPanic(presult.Error)
 	var users model.User
 	result := user.Db.Where("id = ?", userId).Delete(&users)
 	helper.ErrorPanic(result.Error)
+
+	// result := userDao.DB.Unscoped().Model(&user).Association("Post").Unscoped().Clear()
+	// helper.ErrorPanic(result)
+	// userDao.DB.Unscoped().Delete(&user)
 }
 
 // FindAll implements UsersInterface
@@ -77,18 +86,28 @@ func (user *UsersInterfaceImpl) FindByEmail(email string) (model.User, error) {
 // Save implements UsersInterface
 func (user *UsersInterfaceImpl) Save(users model.User) {
 	result := user.Db.Create(&users)
+	fmt.Print(result)
 	helper.ErrorPanic(result.Error)
 }
 
 // Update implements UsersInterface
-func (user *UsersInterfaceImpl) Update(users model.User) {
+func (user *UsersInterfaceImpl) Update(users model.User) error {
 	var updateUsers = request.UpdateUserRequest{
-		Id:       users.Id,
-		Username: users.Username,
-		Email:    users.Email,
-		Password: users.Password,
+		Id:              users.Id,
+		Username:        users.Username,
+		Email:           users.Email,
+		Password:        users.Password,
+		Type:            users.Type,
+		Phone:           users.Phone,
+		Address:         users.Address,
+		Date_Of_Birth:   users.Date_Of_Birth,
+		Updated_User_ID: users.UpdateUserId,
 	}
 
 	result := user.Db.Model(&users).Updates(updateUsers)
 	helper.ErrorPanic(result.Error)
+	if result.Error != nil {
+		return errors.New("something wrong")
+	}
+	return nil
 }

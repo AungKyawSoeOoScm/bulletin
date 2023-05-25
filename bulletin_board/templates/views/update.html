@@ -3,7 +3,9 @@
   {{ template "header.html" }}
   <body>
     {{ template "common_header.html" }}
-    <h2 class="text-center text-primary">Update Post</h2>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css">
+    <h2 class="text-center text-primary mt-5">Update Post</h2>
     <div class="container">
       <form action="/posts/{{ .Tag.Id }}" method="post" class="createForm" id="updateForm">
         <input type="hidden" class="form-control" name="_method" value="PUT">
@@ -29,6 +31,7 @@
       </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {{ template "footer.html" }}
   </body>
 </html>

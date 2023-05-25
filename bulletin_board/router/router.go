@@ -55,6 +55,10 @@ func UsersRouter(router *gin.RouterGroup, usersInterface interfaces.UsersInterfa
 	userRouter := router.Group("/users")
 	{
 		userRouter.GET("", middlewares.IsAuth(usersInterface), usersController.GetUsers)
+		userRouter.GET("/create", middlewares.IsAuth(usersInterface), usersController.CreateUser)
+		userRouter.GET("/update/:userId", middlewares.IsAuth(usersInterface), usersController.UpdateForm)
+		userRouter.DELETE("/:userId", middlewares.IsAuth(usersInterface), usersController.Delete)
+		userRouter.POST("/:userId", middlewares.IsAuth(usersInterface), usersController.Update)
 	}
 }
 
@@ -64,7 +68,7 @@ func TagsRouter(router *gin.RouterGroup, PostsController *controller.PostControl
 	{
 		tagRouter.GET("/create", PostsController.CreateForm)
 		// tagRouter.GET("/createConfirm", PostsController.CreateConfirmForm)
-		tagRouter.GET("/update/:tagId", PostsController.UpdateForm)
+		tagRouter.GET("/update/:tagId", middlewares.IsAuth(userInterface), PostsController.UpdateForm)
 		tagRouter.GET("", middlewares.IsAuth(userInterface), PostsController.FindAll)
 		tagRouter.GET("/:tagId", middlewares.IsAuth(userInterface), PostsController.FindById)
 		tagRouter.POST("", middlewares.IsAuth(userInterface), func(ctx *gin.Context) {

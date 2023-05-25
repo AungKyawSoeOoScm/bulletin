@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/helper"
 	service "gin_test/bulletin_board/service/auth"
@@ -26,6 +27,22 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 	username := ctx.PostForm("username")
 	email := ctx.PostForm("email")
 	password := ctx.PostForm("password")
+	phone := ctx.PostForm("phone")
+	address := ctx.PostForm("address")
+	dob := ctx.PostForm("dob")
+	utype := ctx.PostForm("type")
+	var userType string
+	if utype == "1" {
+		userType = "1" // Admin
+	} else {
+		userType = "0" // User (default)
+	}
+
+	dobTime, err := time.Parse("2006-01-02", dob)
+	if err != nil {
+		fmt.Print("date wrong")
+	}
+
 	// Check if email already exists
 	existingUser := controller.AuthService.FindByEmail(email)
 	if existingUser.Id != 0 {
@@ -49,10 +66,15 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 		return
 	}
 	createUserRequest := request.CreateUserRequest{
-		Username: username,
-		Email:    email,
-		Password: password,
+		Username:      username,
+		Email:         email,
+		Password:      password,
+		Phone:         phone,
+		Address:       address,
+		Date_Of_Birth: &dobTime,
+		Type:          userType, //  if user choose noting then select 0 , if not select 1
 	}
+	fmt.Println(createUserRequest)
 	controller.AuthService.Register(createUserRequest)
 	// helper.ResponseHandler(ctx, http.StatusOK, "Created User Success.", nil)
 	ctx.Redirect(http.StatusFound, "/login")

@@ -95,13 +95,13 @@ func (controller *PostController) Update(ctx *gin.Context) {
 		updateTagsRequest.Status = &status
 	}
 	fmt.Println(updateTagsRequest)
-	if err := ctx.ShouldBind(&updateTagsRequest); err != nil {
-		ctx.HTML(http.StatusBadRequest, "update.html", gin.H{
-			"Tag":    updateTagsRequest,
-			"Errors": err.Error(),
-		})
-		return
-	}
+	// if err := ctx.ShouldBind(&updateTagsRequest); err != nil {
+	// 	ctx.HTML(http.StatusBadRequest, "update.html", gin.H{
+	// 		"Tag":    updateTagsRequest,
+	// 		"Errors": err.Error(),
+	// 	})
+	// 	return
+	// }
 
 	uerr := controller.tagsService.Update(updateTagsRequest)
 	if uerr != nil {
@@ -184,5 +184,4 @@ func (controller *PostController) UpdateForm(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "update.html", gin.H{
 		"Tag": tag,
 	})
-	fmt.Print(tag)
 }

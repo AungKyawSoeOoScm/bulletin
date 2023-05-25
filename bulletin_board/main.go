@@ -9,6 +9,7 @@ import (
 	"gin_test/bulletin_board/router"
 	authService "gin_test/bulletin_board/service/auth"
 	postService "gin_test/bulletin_board/service/post"
+	userService "gin_test/bulletin_board/service/user"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -27,11 +28,16 @@ func main() {
 	// db.Table("posts").AutoMigrate(&model.Posts{})
 	// db.Table("users").AutoMigrate(&model.User{})
 
-	// Users
+	// User interface
 	userInterface := interfaces.NewUsersInterfaceImpl(config.DB)
+
+	//auth
 	authService := authService.NewAuthServiceImpl(userInterface, validate)
 	authController := controller.NewAuthController(authService)
-	userController := controller.NewUsercontroller(userInterface)
+
+	//User
+	userService := userService.NewUserServiceImpl(userInterface, validate)
+	userController := controller.NewUsercontroller(userService)
 
 	// Posts
 	postsInterface := postinterfaces.NewPostsRepositoryImpl(config.DB)
