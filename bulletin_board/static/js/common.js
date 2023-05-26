@@ -5,8 +5,6 @@ function showConfirmation() {
   document.getElementById("confirmDescription").textContent =
     document.getElementById("description").value;
 
-  // Check the checkbox's checked state and set the status confirmation text accordingly
-  // document.getElementById("confirmStatus").textContent ="eierij"
   var statusCheckbox = document.getElementById("status");
   var statusValue = statusCheckbox.checked ? "Active" : "Inactive";
 
@@ -71,5 +69,15 @@ descriptionInput.addEventListener("input", function () {
     descriptionError.innerHTML = "";
   } else {
     descriptionError.innerHTML = "Description field is required";
+  }
+});
+
+var userInput = document.getElementById("username");
+userInput.addEventListener("input", function () {
+  var userError = document.getElementById("userError");
+  if (userInput.value.trim() !== "") {
+    userError.innerHTML = "";
+  } else {
+    userError.innerHTML = "Name field is required";
   }
 });

@@ -83,12 +83,20 @@ func (t *PostsServiceImpl) FindById(tagsId int) response.PostResponse {
 }
 
 // Update implements TagsService
-func (t *PostsServiceImpl) Update(posts request.UpdatePostsRequest) error {
+func (t *PostsServiceImpl) Update(posts request.UpdatePostsRequest, userId int) error {
+	// err := t.validate.Struct(posts)
+	// if err != nil {
+	// 	if validationErrs, ok := err.(validator.ValidationErrors); ok {
+	// 		return validationErrs
+	// 	}
+	// 	return err
+	// }
 	postData, err := t.postsInterface.FindById(posts.Id)
 	helper.ErrorPanic(err)
 	postData.Title = posts.Title
 	postData.Description = posts.Description
 	postData.Status = *posts.Status
+	postData.UpdateUserId = userId
 	uerr := t.postsInterface.Update(postData)
 	if uerr != nil {
 		return err

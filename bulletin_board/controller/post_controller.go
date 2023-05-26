@@ -70,7 +70,7 @@ func (controller *PostController) Create(ctx *gin.Context, userId int) {
 
 // update controller
 
-func (controller *PostController) Update(ctx *gin.Context) {
+func (controller *PostController) Update(ctx *gin.Context, userId int) {
 	tagId := ctx.Param("tagId")
 	title := ctx.PostForm("title")
 	description := ctx.PostForm("description")
@@ -103,7 +103,7 @@ func (controller *PostController) Update(ctx *gin.Context) {
 	// 	return
 	// }
 
-	uerr := controller.tagsService.Update(updateTagsRequest)
+	uerr := controller.tagsService.Update(updateTagsRequest, userId)
 	if uerr != nil {
 		if validationErr, ok := uerr.(validator.ValidationErrors); ok {
 			errorMessages := make(map[string]string)
@@ -167,6 +167,7 @@ func (controller *PostController) FindAll(ctx *gin.Context) {
 	}
 	tagResponse := controller.tagsService.FindAll()
 	// userName:=controller.tagsService.FindById(1)
+
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
 		"tags": tagResponse,
 	})

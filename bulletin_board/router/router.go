@@ -75,7 +75,10 @@ func TagsRouter(router *gin.RouterGroup, PostsController *controller.PostControl
 			userId := ctx.GetInt("Id")
 			PostsController.Create(ctx, userId)
 		})
-		tagRouter.POST("/:tagId", middlewares.IsAuth(userInterface), PostsController.Update)
+		tagRouter.POST("/:tagId", middlewares.IsAuth(userInterface),func(ctx *gin.Context){
+			userId:=ctx.GetInt("Id")
+			PostsController.Update(ctx,userId)
+		} )
 		tagRouter.DELETE("/:tagId", middlewares.IsAuth(userInterface), PostsController.Delete)
 	}
 }

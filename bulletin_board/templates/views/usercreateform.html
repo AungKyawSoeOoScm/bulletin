@@ -4,11 +4,14 @@
     <body>
         {{ template "common_header.html" }}
         <h2 class="text-center mt-5">User Create</h2>
-        <div class="container">
-            <form action="/auth/register" method="post" class="createForm"
-                id="createUserForm">
+        <div class="container w-50">
+            <form action="/auth/register" method="post"
+                class="createForm form-container"
+                id="createUserForm" enctype="multipart/form-data">
                 {{ template "userformcommon.html" . }}
-                <button onclick="showUserConfirmation()" type="button">Submit</button>
+                <button onclick="showUserConfirmation()" type="button"
+                    class="btn btn-primary mt-5">Submit</button>
+                <a class="btn btn-secondary mt-5" href="/users">Cancel</a>
             </form>
 
             <div id="overlay" class="overlay">

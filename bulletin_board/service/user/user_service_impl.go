@@ -62,6 +62,7 @@ func (u *UserServiceImpl) FindById(userId int) response.UserResponse {
 		Phone:         userData.Phone,
 		Address:       userData.Address,
 		Date_Of_Birth: userData.Date_Of_Birth,
+		Profile_Photo: userData.Profile_Photo,
 	}
 	return userResponse
 }
@@ -77,6 +78,7 @@ func (u *UserServiceImpl) Update(users request.UpdateUserRequest) error {
 	userData.Address = users.Address
 	userData.Date_Of_Birth = users.Date_Of_Birth
 	userData.UpdateUserId = users.Updated_User_ID
+	userData.Profile_Photo = users.Profile_Photo
 	uperr := u.UsersInterface.Update(userData)
 	if uperr != nil {
 		return err

@@ -3,9 +3,9 @@ package request
 import "time"
 
 type CreateUserRequest struct {
-	Username        string     `json:"username" validate:"required,min=2,max=100"`
-	Email           string     `json:"email" validate:"required,min=2,max=100"`
-	Password        string     `json:"password" validate:"required,min=2,max=100"`
+	Username        string     `json:"username" validate:"required,min=4,max=15"`
+	Email           string     `json:"email" validate:"required,min=6,max=15"`
+	Password        string     `json:"password" validate:"required,min=6,max=15"`
 	Profile_Photo   string     `json:"profile_photo"`
 	Type            string     `default:"0" json:"type"`
 	Phone           string     `json:"phone"`
@@ -16,9 +16,9 @@ type CreateUserRequest struct {
 
 type UpdateUserRequest struct {
 	Id              int        `validate:"required"`
-	Username        string     `json:"username" validate:"required,min=2,max=100"`
-	Email           string     `json:"email" validate:"required,min=2,max=100"`
-	Password        string     `json:"password" validate:"required,min=2,max=100"`
+	Username        string     `json:"username" validate:"required,min=4,max=15"`
+	Email           string     `json:"email" validate:"required,min=6,max=15"`
+	Password        string     `json:"password" validate:"required,min=6,max=15"`
 	Profile_Photo   string     `json:"profile_photo"`
 	Type            string     `default:"0" json:"type"`
 	Phone           string     `json:"phone"`

@@ -84,10 +84,14 @@ func (user *UsersInterfaceImpl) FindByEmail(email string) (model.User, error) {
 }
 
 // Save implements UsersInterface
-func (user *UsersInterfaceImpl) Save(users model.User) {
+func (user *UsersInterfaceImpl) Save(users model.User) error {
 	result := user.Db.Create(&users)
 	fmt.Print(result)
 	helper.ErrorPanic(result.Error)
+	if result.Error != nil {
+		return errors.New("something wrong")
+	}
+	return nil
 }
 
 // Update implements UsersInterface
@@ -102,6 +106,7 @@ func (user *UsersInterfaceImpl) Update(users model.User) error {
 		Address:         users.Address,
 		Date_Of_Birth:   users.Date_Of_Birth,
 		Updated_User_ID: users.UpdateUserId,
+		Profile_Photo:   users.Profile_Photo,
 	}
 
 	result := user.Db.Model(&users).Updates(updateUsers)

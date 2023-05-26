@@ -5,11 +5,13 @@ import (
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/helper"
 	service "gin_test/bulletin_board/service/auth"
+	"path/filepath"
 
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthController struct {
@@ -33,16 +35,19 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 	utype := ctx.PostForm("type")
 	var userType string
 	if utype == "1" {
-		userType = "1" // Admin
+		userType = "1"
 	} else {
-		userType = "0" // User (default)
+		userType = "0"
 	}
 
-	dobTime, err := time.Parse("2006-01-02", dob)
-	if err != nil {
-		fmt.Print("date wrong")
+	var dobTime *time.Time
+	if dob != "" {
+		parsedDOB, err := time.Parse("2006-01-02", dob)
+		if err != nil {
+			fmt.Print("Invalid date of birth")
+		}
+		dobTime = &parsedDOB
 	}
-
 	// Check if email already exists
 	existingUser := controller.AuthService.FindByEmail(email)
 	if existingUser.Id != 0 {
@@ -50,20 +55,45 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 		return
 	}
 
-	//Required Username
-	if username == "" {
-		helper.ResponseHandler(ctx, http.StatusBadRequest, "Username is required.", nil)
-		return
+	// //Required Username
+	// if username == "" {
+	// 	ctx.Set("UsernameError", "Username is required.")
+	// 	helper.ResponseHandler(ctx, http.StatusBadRequest, "Username is required.", nil)
+	// 	return
+	// }
+
+	// //Required Email
+	// if email == "" {
+	// 	ctx.Set("EmailError", "Email is required.")
+	// 	helper.ResponseHandler(ctx, http.StatusBadRequest, "Email is required.", nil)
+	// 	return
+	// }
+
+	// //Required Password
+	// if password == "" || len(password) < 6 {
+	// 	ctx.Set("PasswordError", "Password must be at least 6 characters long.")
+	// 	helper.ResponseHandler(ctx, http.StatusBadRequest, "Password must be at least 6 characters long.", nil)
+	// 	return
+	// }
+	photoFile, err := ctx.FormFile("photo")
+	if err != nil && err != http.ErrMissingFile {
+		helper.ErrorPanic(err)
 	}
-	//Required Email
-	if email == "" {
-		helper.ResponseHandler(ctx, http.StatusBadRequest, "Email is required.", nil)
-		return
-	}
-	//Required Password
-	if password == "" || len(password) < 6 {
-		helper.ResponseHandler(ctx, http.StatusBadRequest, "Password must be at least 6 chars long.", nil)
-		return
+
+	var photoPath string
+	if photoFile != nil {
+		// Generate a unique file name for the photo
+		photoFileName := fmt.Sprintf("%d_%s", time.Now().Unix(), photoFile.Filename)
+		photoPath = filepath.Join("static", "images", photoFileName)
+
+		// Save the uploaded file to the desired location
+		err := ctx.SaveUploadedFile(photoFile, photoPath)
+		if err != nil {
+			helper.ErrorPanic(err)
+		}
+
+		// Convert backslashes to forward slashes
+		photoPath = filepath.ToSlash(photoPath)
 	}
 	createUserRequest := request.CreateUserRequest{
 		Username:      username,
@@ -71,13 +101,51 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 		Password:      password,
 		Phone:         phone,
 		Address:       address,
-		Date_Of_Birth: &dobTime,
-		Type:          userType, //  if user choose noting then select 0 , if not select 1
+		Date_Of_Birth: dobTime,
+		Type:          userType,
+		Profile_Photo: photoPath,
 	}
 	fmt.Println(createUserRequest)
-	controller.AuthService.Register(createUserRequest)
-	// helper.ResponseHandler(ctx, http.StatusOK, "Created User Success.", nil)
-	ctx.Redirect(http.StatusFound, "/login")
+	aerr := controller.AuthService.Register(createUserRequest)
+	fmt.Println(aerr, "ererrrrrrr")
+	if aerr != nil {
+		if validationErr, ok := aerr.(validator.ValidationErrors); ok {
+			errorMessages := make(map[string]string)
+			for _, fieldErr := range validationErr {
+				fieldName := fieldErr.Field()
+				errorMessage := ""
+				switch fieldErr.Tag() {
+				case "required":
+					errorMessage = fieldName + " field is required"
+				case "min":
+					errorMessage = fieldName + " must be at least " + fieldErr.Param() + " characters long"
+				case "max":
+					errorMessage = fieldName + " must not exceed " + fieldErr.Param() + " characters"
+				default:
+					errorMessage = "Field validation failed"
+				}
+				errorMessages[fieldName] = errorMessage
+				fmt.Println(errorMessages[fieldName])
+			}
+
+			ctx.HTML(http.StatusBadRequest, "usercreateform.html", gin.H{
+				"Errors": errorMessages,
+			})
+			return
+		} else {
+
+			// Handle other types of errors (if needed)
+			// ...
+			ctx.HTML(http.StatusBadRequest, "usercreateform.html", gin.H{
+				"Errors": map[string]string{
+					"general": "An error occurred during registration",
+				},
+			})
+			return
+		}
+	} else {
+		ctx.Redirect(http.StatusFound, "/login")
+	}
 }
 
 // Login Controller
@@ -108,20 +176,8 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 		SameSite: http.SameSiteStrictMode,
 	}
 	ctx.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
-	// Or set the token in session storage
-
-	// Set token in local storage using JavaScript
-	// jsCode := fmt.Sprintf(`localStorage.setItem('token', '%s');`, resp.Token)
-	// ctx.Header("Content-Type", "text/html")
-	// ctx.String(http.StatusOK, "<script>"+jsCode+"</script>")
-
-	// helper.ResponseHandler(ctx, http.StatusOK, "Login Success.", resp)
 	ctx.Redirect(http.StatusFound, "/posts")
 }
-
-// func (controller *TagsController) CreateForm(ctx *gin.Context) {
-// 	ctx.HTML(http.StatusOK, "create.html", gin.H{})
-// }
 
 // Register Form
 func (controller *AuthController) RegisterForm(ctx *gin.Context) {

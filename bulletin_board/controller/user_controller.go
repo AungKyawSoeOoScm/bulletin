@@ -5,6 +5,7 @@ import (
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/helper"
 	service "gin_test/bulletin_board/service/user"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -60,6 +61,27 @@ func (controller *UsersController) Update(ctx *gin.Context) {
 	if method := ctx.Request.Header.Get("X-HTTP-Method-Override"); method == "PUT" {
 		ctx.Request.Method = "PUT"
 	}
+
+	photoFile, err := ctx.FormFile("photo")
+	if err != nil && err != http.ErrMissingFile {
+		helper.ErrorPanic(err)
+	}
+
+	var photoPath string
+	if photoFile != nil {
+		// Generate a unique file name for the photo
+		photoFileName := fmt.Sprintf("%d_%s", time.Now().Unix(), photoFile.Filename)
+		photoPath = filepath.Join("static", "images", photoFileName)
+
+		// Save the uploaded file to the desired location
+		err := ctx.SaveUploadedFile(photoFile, photoPath)
+		if err != nil {
+			helper.ErrorPanic(err)
+		}
+
+		// Convert backslashes to forward slashes
+		photoPath = filepath.ToSlash(photoPath)
+	}
 	updateUserRequest := request.UpdateUserRequest{
 		Id:              id,
 		Username:        username,
@@ -69,6 +91,7 @@ func (controller *UsersController) Update(ctx *gin.Context) {
 		Address:         address,
 		Updated_User_ID: id,
 		Date_Of_Birth:   &dobTime,
+		Profile_Photo:   photoPath,
 	}
 	controller.userService.Update(updateUserRequest)
 	ctx.Redirect(http.StatusFound, "/users")
@@ -87,6 +110,7 @@ func (controller *UsersController) UpdateForm(ctx *gin.Context) {
 	helper.ErrorPanic(err)
 	user := controller.userService.FindById(id)
 	ctx.HTML(http.StatusOK, "userupdate.html", gin.H{
-		"User": user,
+		"User":     user,
+		"IsUpdate": true,
 	})
 }
