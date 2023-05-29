@@ -2,12 +2,13 @@
 <html>
     {{ template "header.html" }}
     <body>
-        {{ template "common_header.html" }}
+        {{ template "common_header.html" .}}
         <h2 class="text-center mt-5">User Create</h2>
         <div class="container w-50">
             <form action="/auth/register" method="post"
                 class="createForm form-container"
                 id="createUserForm" enctype="multipart/form-data">
+                <input type="hidden" name="source" value="usercreateform">
                 {{ template "userformcommon.html" . }}
                 <button onclick="showUserConfirmation()" type="button"
                     class="btn btn-primary mt-5">Submit</button>

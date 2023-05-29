@@ -2,7 +2,7 @@
 <html>
     {{ template "header.html" }}
     <body>
-        {{ template "common_header.html" }}
+        {{ template "common_header.html" .}}
         <h2 class="text-center mt-5">User Update</h2>
         <div class="container w-50 form-container">
             <form action="/users/{{ .User.Id }}" method="post"

@@ -2,7 +2,7 @@
 <html>
     {{ template "header.html" }}
     <body>
-        {{ template "common_header.html" }}
+        {{ template "common_header.html" .}}
         <h2 class="text-center mt-5 greyBack">Post Create</h2>
         <div class="container w-50 form-container mt-5">
             <form action="/posts/" method="post" class="createForm"

@@ -1,26 +1,32 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/data/response"
 	"gin_test/bulletin_board/helper"
 	service "gin_test/bulletin_board/service/post"
+	uservice "gin_test/bulletin_board/service/user"
+	"os"
 
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 )
 
 type PostController struct {
 	tagsService service.PostsService
+	userService uservice.UserService
 }
 
-func NewPostsController(service service.PostsService) *PostController {
+func NewPostsController(service service.PostsService, uservice uservice.UserService) *PostController {
 	return &PostController{
 		tagsService: service,
+		userService: uservice,
 	}
 }
 
@@ -158,31 +164,142 @@ func (controller *PostController) FindById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
+// Login  check
+func getIsLoggedIn(ctx *gin.Context) bool {
+	isLoggedIn := false
+	cookie, err := ctx.Request.Cookie("token")
+	if err == nil && cookie.Value != "" {
+		isLoggedIn = true
+	}
+	return isLoggedIn
+}
+
+func getCurrentUserID(ctx *gin.Context) (int, error) {
+	cookie, err := ctx.Request.Cookie("token")
+	if err != nil && err != http.ErrNoCookie {
+		return 0, err
+	}
+
+	if cookie == nil {
+		// Handle the case when the "token" cookie is not present
+		// Return a default value for the user ID
+		// ctx.Redirect(http.StatusFound, "/")
+		return 0, nil
+	}
+
+	tokenString := cookie.Value
+	tokenSecret := os.Getenv("TOKEN_SECRET")
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(tokenSecret), nil
+	})
+	if err != nil || !token.Valid {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, errors.New("invalid token claims")
+	}
+
+	userIDFloat, ok := claims["sub"].(float64)
+	if !ok {
+		return 0, errors.New("invalid user ID in token claims")
+	}
+
+	userID := int(userIDFloat)
+	return userID, nil
+}
+
 // findAll controller
 func (controller *PostController) FindAll(ctx *gin.Context) {
-	cookie, err := ctx.Request.Cookie("token")
-	if err != nil || cookie.Value == "" {
-		fmt.Print("No token")
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, err := getCurrentUserID(ctx)
+	fmt.Print(userID, err)
+	if err != nil && userID == 0 {
+		ctx.Redirect(http.StatusFound, "/")
 		return
 	}
-	tagResponse := controller.tagsService.FindAll()
-	// userName:=controller.tagsService.FindById(1)
+
+	var tagResponse []response.PostResponse
+	if userID != 0 {
+		currentUser := controller.userService.FindById(userID)
+		if currentUser.Type == "1" {
+			tagResponse = controller.tagsService.FindAll()
+		} else {
+			tagResponse = controller.tagsService.FindPostByUserId(userID)
+		}
+
+		ctx.HTML(http.StatusOK, "index.html", gin.H{
+			"tags":        tagResponse,
+			"IsLoggedIn":  isLoggedIn,
+			"CurrentUser": currentUser,
+		})
+		return
+	}
+
+	// If userID is 0 (no user logged in), retrieve all tags without currentUser
+	tagResponse = controller.tagsService.FindAll()
 
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
-		"tags": tagResponse,
+		"tags":       tagResponse,
+		"IsLoggedIn": isLoggedIn,
 	})
 }
 
+// Create Form
 func (controller *PostController) CreateForm(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "create.html", gin.H{})
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	currentUser := controller.userService.FindById(userID)
+
+	ctx.HTML(http.StatusOK, "create.html", gin.H{
+		"IsLoggedIn":  isLoggedIn,
+		"CurrentUser": currentUser,
+	})
 }
 
+// Update Form
 func (controller *PostController) UpdateForm(ctx *gin.Context) {
-	tagId := ctx.Param("tagId")
-	id, err := strconv.Atoi(tagId)
-	helper.ErrorPanic(err)
-	tag := controller.tagsService.FindById(id)
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	currentUser := controller.userService.FindById(userID)
+
+	// Retrieve the post ID from the URL parameter
+	postID := ctx.Param("tagId")
+	id, err := strconv.Atoi(postID)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/posts")
+		return
+	}
+
+	post := controller.tagsService.FindById(id)
+
+	if post.Id == 0 {
+		ctx.Redirect(http.StatusFound, "/posts")
+		return
+	}
+
+	if currentUser.Type != "1" {
+		if userID != post.CreateUserId {
+			ctx.Redirect(http.StatusFound, "/posts")
+			return
+		}
+	}
+
 	ctx.HTML(http.StatusOK, "update.html", gin.H{
-		"Tag": tag,
+		"Tag":         post,
+		"IsLoggedIn":  isLoggedIn,
+		"CurrentUser": currentUser,
 	})
+
 }

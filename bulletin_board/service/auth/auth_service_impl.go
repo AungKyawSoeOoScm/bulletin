@@ -80,6 +80,7 @@ func (auth *AuthServiceImpl) Register(users request.CreateUserRequest) error {
 		Date_Of_Birth: users.Date_Of_Birth,
 		Type:          users.Type,
 		Profile_Photo: users.Profile_Photo,
+		CreateUserId:  users.Created_User_ID,
 	}
 	fmt.Print(newUser)
 	uerr := auth.UsersInterface.Save(newUser)

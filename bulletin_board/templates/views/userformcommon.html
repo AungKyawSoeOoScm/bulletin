@@ -12,6 +12,9 @@
 {{ with .Errors.Email }}
 <p class="error" id="emailError">{{.}}</p>
 {{ end }}
+{{ with .Errors.EmailExists }}
+<p class="error" id="emailExistsError">{{.}}</p>
+{{ end }}
 
 {{ if not .IsUpdate }}
 <label for="password" class="mb-2 mt-3 grey">Password</label>
@@ -22,18 +25,25 @@
 {{ end }}
 
 <label for="password" class="mb-2 mt-3  grey">Password Confirmation</label>
-<input class="form-control fcon" type="password" id="cpassword" name="cpassword">
+<input class="form-control fcon" type="password" id="confirmPassword"
+    name="confirmPassword">
+{{ with .Errors.ConfirmPassword }}
+<p class="error" id="confirmPasswordError">{{.}}</p>
+{{ end }}
 
 {{ end }}
 <label for="type" class="mb-2 mt-3  grey">Type</label>
 <select class="form-select" aria-label="Default select example" name="type"
-    id="type">
+    id="type" {{ if eq .CurrentUser.Type "0" }} disabled{{ end }}>
     {{if eq .User.Type "0"}}
     <option value="0" selected>User</option>
     <option value="1">Admin</option>
-    {{else}}
+    {{else if eq .User.Type "1"}}
     <option value="0">User</option>
     <option value="1" selected>Admin</option>
+    {{else}}
+    <option value="0" selected>User</option>
+    <option value="1">Admin</option>
     {{end}}
 </select>
 
