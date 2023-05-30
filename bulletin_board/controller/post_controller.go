@@ -1,14 +1,18 @@
 package controller
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"gin_test/bulletin_board/data/request"
 	"gin_test/bulletin_board/data/response"
 	"gin_test/bulletin_board/helper"
+	"gin_test/bulletin_board/model"
 	service "gin_test/bulletin_board/service/post"
 	uservice "gin_test/bulletin_board/service/user"
+	"io/ioutil"
 	"os"
+	"time"
 
 	"net/http"
 	"strconv"
@@ -16,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
+	"gorm.io/gorm"
 )
 
 type PostController struct {
@@ -263,6 +268,21 @@ func (controller *PostController) CreateForm(ctx *gin.Context) {
 	})
 }
 
+// Upload csv form
+func (controller *PostController) UploadForm(ctx *gin.Context) {
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/login")
+		return
+	}
+	currentUser := controller.userService.FindById(userID)
+	ctx.HTML(http.StatusOK, "upload.html", gin.H{
+		"IsLoggedIn":  isLoggedIn,
+		"CurrentUser": currentUser,
+	})
+}
+
 // Update Form
 func (controller *PostController) UpdateForm(ctx *gin.Context) {
 	isLoggedIn := getIsLoggedIn(ctx)
@@ -302,4 +322,178 @@ func (controller *PostController) UpdateForm(ctx *gin.Context) {
 		"CurrentUser": currentUser,
 	})
 
+}
+
+func (controller *PostController) UploadPosts(ctx *gin.Context, db *gorm.DB) {
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		ctx.String(http.StatusBadRequest, fmt.Sprintf("Error getting user Id: %s", err.Error()))
+		return
+	}
+
+	currentUser := controller.userService.FindById(userID)
+
+	// Retrieve the uploaded file
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.HTML(http.StatusBadRequest, "upload.html", gin.H{
+			"IsLoggedIn":  isLoggedIn,
+			"CurrentUser": currentUser,
+			"Errors": map[string]string{
+				"Nofile": "Please choose a file.",
+			},
+		})
+		return
+	}
+
+	// Open the uploaded file
+	csvfile, err := file.Open()
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error opening file: %s", err.Error()))
+		return
+	}
+	defer csvfile.Close()
+
+	// Parse the CSV file
+	reader := csv.NewReader(csvfile)
+	records, err := reader.ReadAll()
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error reading CSV: %s", err.Error()))
+		return
+	}
+
+	// Save each row to the database
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		status, err := strconv.Atoi(row[2])
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error converting status: %s", err.Error()))
+			return
+		}
+
+		post := model.Posts{
+			Title:        row[0],
+			Description:  row[1],
+			Status:       status,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+			CreateUserId: userID,
+			UpdateUserId: userID,
+			// Set the CreateUserId and UpdateUserId appropriately
+		}
+
+		// Save the post to the database using GORM
+		if err := db.Create(&post).Error; err != nil {
+			ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error saving post: %s", err.Error()))
+			return
+		}
+	}
+
+	// Return a success message
+	ctx.String(http.StatusOK, "CSV file uploaded and processed successfully")
+}
+
+func (controller *PostController) DownloadPosts(ctx *gin.Context, db *gorm.DB) {
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		helper.ErrorPanic(err)
+	}
+	currentUser := controller.userService.FindById(userID)
+	// Define the filter based on the user's role and ID
+	var posts []model.Posts
+	filter := db
+	if currentUser.Type == "1" {
+		// Admin can download all posts
+		filter = filter.Find(&posts)
+	} else {
+		// User can only download their own posts
+		filter = filter.Where("create_user_id = ?", userID).Find(&posts)
+	}
+
+	// Check for errors while retrieving the posts
+	if err := filter.Error; err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving posts: %s", err.Error()))
+		return
+	}
+
+	// Generate CSV content from the posts data
+	csvData := [][]string{
+		{"Id", "Title", "Description", "Status", "Created At", "Updated At", "Create User ID", "Update User ID"},
+	}
+	for _, post := range posts {
+		csvData = append(csvData, []string{
+			strconv.Itoa(post.Id),
+			post.Title,
+			post.Description,
+			strconv.Itoa(post.Status),
+			post.CreatedAt.Format("2006-01-02"),
+			post.UpdatedAt.Format("2006-01-02"),
+			strconv.Itoa(post.CreateUserId),
+			strconv.Itoa(post.UpdateUserId),
+		})
+	}
+
+	// Create a temporary file to write the CSV data
+	tempFile, err := ioutil.TempFile("", "table_data_*.csv")
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error creating temporary file: %s", err.Error()))
+		return
+	}
+	defer os.Remove(tempFile.Name())
+
+	// Write the CSV data to the temporary file
+	csvWriter := csv.NewWriter(tempFile)
+	if err := csvWriter.WriteAll(csvData); err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error writing CSV data: %s", err.Error()))
+		return
+	}
+	csvWriter.Flush()
+
+	// Check for any errors during the CSV write
+	if err := csvWriter.Error(); err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error writing CSV data: %s", err.Error()))
+		return
+	}
+
+	// Read the contents of the temporary file
+	fileContents, err := ioutil.ReadFile(tempFile.Name())
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error reading file contents: %s", err.Error()))
+		return
+	}
+
+	// Set the appropriate headers for the response
+	ctx.Header("Content-Disposition", "attachment; filename=table_data.csv")
+	ctx.Data(http.StatusOK, "text/csv", fileContents)
+}
+
+func (controller *PostController) SearchPosts(ctx *gin.Context, db *gorm.DB) {
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, lerr := getCurrentUserID(ctx)
+	if lerr != nil {
+		ctx.String(http.StatusBadRequest, fmt.Sprintf("Error getting user Id: %s", lerr.Error()))
+		return
+	}
+
+	currentUser := controller.userService.FindById(userID)
+
+	searchQuery := ctx.PostForm("searchQuery")
+
+	// Retrieve the posts from the database based on the search query
+	var posts []model.Posts
+	err := db.Where("title LIKE ? OR description LIKE ?", "%"+searchQuery+"%", "%"+searchQuery+"%").Find(&posts).Error
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving posts: %s", err.Error()))
+		return
+	}
+
+	// Pass the search results to the template for rendering
+	ctx.HTML(http.StatusOK, "index.html", gin.H{
+		"IsLoggedIn":  isLoggedIn,
+		"CurrentUser": currentUser,
+		"tags":        posts,
+	})
 }

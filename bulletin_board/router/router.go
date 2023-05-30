@@ -3,6 +3,7 @@ package router
 import (
 	"gin_test/bulletin_board/controller"
 	interfaces "gin_test/bulletin_board/dao/user"
+	"gin_test/bulletin_board/initializers"
 	middlewares "gin_test/bulletin_board/middleware"
 
 	"github.com/gin-contrib/cors"
@@ -17,10 +18,6 @@ func NewRouter(authController *controller.AuthController, userController *contro
 	router.Use(cors.New(config))
 	router.LoadHTMLGlob("templates/**/*")
 	router.Static("/static", "./static/")
-	// router.GET("", func(ctx *gin.Context) {
-	// 	ctx.JSON(http.StatusOK, "welcome home")
-	// })
-
 	apiRouter := router.Group("/")
 	AuthRouter(apiRouter, authController)
 	UsersRouter(apiRouter, usersInterface, userController)
@@ -56,6 +53,7 @@ func UsersRouter(router *gin.RouterGroup, usersInterface interfaces.UsersInterfa
 			userRole := ctx.GetString("UserRole")
 			usersController.GetUsers(ctx, userRole)
 		})
+		userRouter.GET("/profile", middlewares.IsAuth(usersInterface), usersController.ProfileForm)
 		userRouter.GET("/create", middlewares.IsAuth(usersInterface), usersController.CreateUser)
 		userRouter.GET("/update/:userId", middlewares.IsAuth(usersInterface), usersController.UpdateForm)
 		userRouter.DELETE("/:userId", middlewares.IsAuth(usersInterface), usersController.Delete)
@@ -68,6 +66,19 @@ func TagsRouter(router *gin.RouterGroup, PostsController *controller.PostControl
 	tagRouter := router.Group("/posts")
 	{
 		tagRouter.GET("/create", PostsController.CreateForm)
+		router.POST("/posts/download", func(c *gin.Context) {
+			initializers.ConnectDatabase()
+			PostsController.DownloadPosts(c, initializers.DB)
+		})
+		tagRouter.GET("/upload", middlewares.IsAuth(userInterface), PostsController.UploadForm)
+		router.POST("/posts/upload", func(c *gin.Context) {
+			initializers.ConnectDatabase()
+			PostsController.UploadPosts(c, initializers.DB)
+		})
+		router.POST("/posts/search", func(c *gin.Context) {
+			initializers.ConnectDatabase()
+			PostsController.SearchPosts(c, initializers.DB)
+		})
 		// tagRouter.GET("/createConfirm", PostsController.CreateConfirmForm)
 		tagRouter.GET("/update/:tagId", middlewares.IsAuth(userInterface), PostsController.UpdateForm)
 		tagRouter.GET("", PostsController.FindAll)
