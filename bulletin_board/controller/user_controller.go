@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UsersController struct {
@@ -202,4 +203,124 @@ func (controller *UsersController) ProfileForm(ctx *gin.Context) {
 		"CurrentUser": currentUser,
 		"IsLoggedIn":  isLoggedIn,
 	})
+}
+func checkPassword(currentPassword, storedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(currentPassword))
+	return err == nil
+}
+
+// change password form
+func (controller *UsersController) ChangePasswordForm(ctx *gin.Context) {
+	isLoggedIn := getIsLoggedIn(ctx)
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/users")
+		return
+	}
+	currentUser := controller.userService.FindById(userID)
+	currentPassword := ctx.PostForm("cpassword")
+	newPassword := ctx.PostForm("password")
+	confirmPassword := ctx.PostForm("ncpassword")
+
+	// Validate current password
+	if !checkPassword(currentPassword, currentUser.Password) {
+		// Current password does not match, display an error message
+		ctx.HTML(http.StatusOK, "changepasswordform.html", gin.H{
+			"CurrentUser": currentUser,
+			"IsLoggedIn":  true,
+			"Error":       "Current password is incorrect",
+		})
+		return
+	}
+
+	// Validate new password and confirm password
+	if newPassword != confirmPassword {
+		// New password and confirm password do not match, display an error message
+		ctx.Set("ConfirmPasswordError", "Passwords do not match.")
+		ctx.HTML(http.StatusBadRequest, "changepasswordform.html", gin.H{
+			"Errors": map[string]string{
+				"ConfirmPassword": "Passwords do not match.",
+			},
+		})
+		return
+	}
+	fmt.Print(currentUser.Id, "CURRENTID")
+	ctx.HTML(http.StatusOK, "changepasswordform.html", gin.H{
+		"CurrentUser": currentUser,
+		"IsLoggedIn":  isLoggedIn,
+	})
+}
+
+func (controller *UsersController) UpdatePassword(ctx *gin.Context) {
+	userID, err := getCurrentUserID(ctx)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/users")
+		return
+	}
+	currentUser := controller.userService.FindById(userID)
+	// userId := ctx.Param("userId")
+	username := ctx.PostForm("username")
+	email := ctx.PostForm("email")
+	utype := ctx.PostForm("type")
+	password := ctx.PostForm("password")
+	phone := ctx.PostForm("phone")
+	dob := ctx.PostForm("dob")
+	address := ctx.PostForm("address")
+	var dobTime *time.Time
+	if dob != "" {
+		parsedDOB, err := time.Parse("2006-01-02", dob)
+		if err != nil {
+			fmt.Print("Invalid date of birth")
+		}
+		dobTime = &parsedDOB
+	}
+	// id, err := strconv.Atoi(userId)
+	helper.ErrorPanic(err)
+	if method := ctx.Request.Header.Get("X-HTTP-Method-Override"); method == "PUT" {
+		ctx.Request.Method = "PUT"
+	}
+
+	photoFile, err := ctx.FormFile("photo")
+	if err != nil && err != http.ErrMissingFile {
+		helper.ErrorPanic(err)
+	}
+
+	var photoPath string
+	if photoFile != nil {
+		// Generate a unique file name for the photo
+		photoFileName := fmt.Sprintf("%d_%s", time.Now().Unix(), photoFile.Filename)
+		photoPath = filepath.Join("static", "images", photoFileName)
+
+		// Save the uploaded file to the desired location
+		err := ctx.SaveUploadedFile(photoFile, photoPath)
+		if err != nil {
+			helper.ErrorPanic(err)
+		}
+
+		// Convert backslashes to forward slashes
+		photoPath = filepath.ToSlash(photoPath)
+	}
+
+	updateUserRequest := request.UpdateUserRequest{
+		Id:            currentUser.Id,
+		Username:      username,
+		Email:         email,
+		Password:      password,
+		Type:          utype,
+		Phone:         phone,
+		Address:       address,
+		UpdateUserId:  userID,
+		Date_Of_Birth: dobTime,
+		Profile_Photo: photoPath,
+	}
+	controller.userService.Update(updateUserRequest)
+	ctx.Redirect(http.StatusFound, "/users")
+
+	err = controller.userService.UpdatePassword(updateUserRequest)
+	if err != nil {
+		// Handle error and display an error message
+		return
+	}
+
+	// Password updated successfully, redirect or display a success message
 }

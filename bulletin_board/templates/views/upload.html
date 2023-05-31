@@ -13,6 +13,12 @@
         {{ with .Errors.Nofile }}
         <p class="errorM">{{.}}</p>
         {{ end }}
+        {{ with .Errors.RowCount }}
+        <p class="errorM">{{.}}</p>
+        {{ end }}
+        {{ with .Errors.FileFormat }}
+        <p class="errorM">{{.}}</p>
+        {{ end }}
         <button type="submit" class="btn btn-primary mt-2">Upload</button>
 
       </form>

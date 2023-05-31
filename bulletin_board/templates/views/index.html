@@ -35,16 +35,14 @@
     <form action="posts/download" method="post" class="mt-5 d-inline">
       <button type="submit" class="btn btn-primary mt-5">Download</button>
     </form>
-    <div class="search-container mt-5 ms-3">
-      <form action="/posts/search" method="post" class="mt-5 sform d-inline">
-        <input type="text" class="form-control" name="searchQuery">
-        <button type="submit">Search</button>
-      </form>
+    <div class="search-container">
+      <input type="text" id="searchInput" class="form-control"
+        placeholder="Search by Title or Description">
     </div>
 
     {{end}}
     <div class="container-fluid">
-      <table class="table .table-responsive bs-table mt-5">
+      <table id="postTable" class="table .table-responsive bs-table mt-5">
         <thead>
           <tr>
             <th scope="col">No.</th>
@@ -128,7 +126,12 @@
         </tbody>
       </table>
     </div>
+    <div id="noPostMsg" class="noUser">No post found.</div>
     {{ template "footer.html" }}
+
+    <script>
+    document.getElementById("searchInput").addEventListener("input", search);
+    </script>
   </body>
 </html>
 {{end}}

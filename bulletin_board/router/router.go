@@ -54,6 +54,8 @@ func UsersRouter(router *gin.RouterGroup, usersInterface interfaces.UsersInterfa
 			usersController.GetUsers(ctx, userRole)
 		})
 		userRouter.GET("/profile", middlewares.IsAuth(usersInterface), usersController.ProfileForm)
+		userRouter.GET("/changepassword", middlewares.IsAuth(usersInterface), usersController.ChangePasswordForm)
+		userRouter.POST("/changepassword", middlewares.IsAuth(usersInterface), usersController.UpdatePassword)
 		userRouter.GET("/create", middlewares.IsAuth(usersInterface), usersController.CreateUser)
 		userRouter.GET("/update/:userId", middlewares.IsAuth(usersInterface), usersController.UpdateForm)
 		userRouter.DELETE("/:userId", middlewares.IsAuth(usersInterface), usersController.Delete)
@@ -75,10 +77,7 @@ func TagsRouter(router *gin.RouterGroup, PostsController *controller.PostControl
 			initializers.ConnectDatabase()
 			PostsController.UploadPosts(c, initializers.DB)
 		})
-		router.POST("/posts/search", func(c *gin.Context) {
-			initializers.ConnectDatabase()
-			PostsController.SearchPosts(c, initializers.DB)
-		})
+
 		// tagRouter.GET("/createConfirm", PostsController.CreateConfirmForm)
 		tagRouter.GET("/update/:tagId", middlewares.IsAuth(userInterface), PostsController.UpdateForm)
 		tagRouter.GET("", PostsController.FindAll)
