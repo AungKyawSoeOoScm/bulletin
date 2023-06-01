@@ -19,6 +19,8 @@ func NewRouter(authController *controller.AuthController, userController *contro
 	router.LoadHTMLGlob("templates/**/*")
 	router.Static("/static", "./static/")
 	apiRouter := router.Group("/")
+	apiRouter.GET("/password_reset/:token/edit", userController.ResetPasswordForm)
+	apiRouter.POST("/resetPassword/:token", userController.ResetPassword)
 	AuthRouter(apiRouter, authController)
 	UsersRouter(apiRouter, usersInterface, userController)
 	TagsRouter(apiRouter, postController, usersInterface)
@@ -32,6 +34,10 @@ func AuthForm(router *gin.RouterGroup, authController *controller.AuthController
 	{
 		authForm.GET("/register", authController.RegisterForm)
 		authForm.GET("/login", authController.LoginForm)
+		authForm.GET("/forgetpassword", authController.ForgetPasswordForm)
+		// authForm.GET("/password_reset/:token/edit", authController.ResetPasswordForm)
+		// authForm.POST("/resetPassword/:token", authController.ResetPassword)
+		authForm.POST("/forgetpassword/sendmail", authController.ForgetPassword)
 	}
 }
 
@@ -55,7 +61,7 @@ func UsersRouter(router *gin.RouterGroup, usersInterface interfaces.UsersInterfa
 		})
 		userRouter.GET("/profile", middlewares.IsAuth(usersInterface), usersController.ProfileForm)
 		userRouter.GET("/changepassword", middlewares.IsAuth(usersInterface), usersController.ChangePasswordForm)
-		userRouter.POST("/changepassword", middlewares.IsAuth(usersInterface), usersController.UpdatePassword)
+		router.POST("/users/changepasswords", middlewares.IsAuth(usersInterface), usersController.UpdatePassword)
 		userRouter.GET("/create", middlewares.IsAuth(usersInterface), usersController.CreateUser)
 		userRouter.GET("/update/:userId", middlewares.IsAuth(usersInterface), usersController.UpdateForm)
 		userRouter.DELETE("/:userId", middlewares.IsAuth(usersInterface), usersController.Delete)
