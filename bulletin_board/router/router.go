@@ -69,7 +69,7 @@ func UsersRouter(router *gin.RouterGroup, usersInterface interfaces.UsersInterfa
 	}
 }
 
-// TagRouter
+// PostRouter
 func TagsRouter(router *gin.RouterGroup, PostsController *controller.PostController, userInterface interfaces.UsersInterface) {
 	tagRouter := router.Group("/posts")
 	{

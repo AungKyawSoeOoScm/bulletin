@@ -198,7 +198,7 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 				errorMessage := ""
 				switch fieldErr.Tag() {
 				case "required":
-					errorMessage = fieldName + " field is required"
+					errorMessage = fieldName + "  is required"
 				case "min":
 					errorMessage = fieldName + " must be at least " + fieldErr.Param() + " characters long"
 				case "max":
@@ -236,11 +236,37 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 func (controller *AuthController) Login(ctx *gin.Context) {
 	email := ctx.PostForm("email")
 	password := ctx.PostForm("password")
+	remember := ctx.PostForm("remember")
+	rememberMe := remember == "on"
+	// if remember == "on" {
+	// 	rememberMe = true
+	// } else {
+	// 	rememberMe = false
+	// }
+	fmt.Println("rember me", remember)
 	loginRequest := request.LoginRequest{
 		Email:    email,
 		Password: password,
 	}
-	token, err_token := controller.AuthService.Login(loginRequest)
+	if email == "" {
+		ctx.HTML(http.StatusBadRequest, "login.html", gin.H{
+			// "Errors": map[string]string{
+			// 	"emailNeed": "Email is required",
+			// },
+		})
+		return
+	}
+
+	if password == "" {
+		ctx.HTML(http.StatusBadRequest, "login.html", gin.H{
+			"Errors": map[string]string{
+				"passwordNeed": "Password is required",
+			},
+		})
+		return
+	}
+
+	token, err_token := controller.AuthService.Login(loginRequest, rememberMe)
 	if err_token != nil {
 		ctx.Set("logFail", "Invalid email or password.")
 		ctx.HTML(http.StatusBadRequest, "login.html", gin.H{
@@ -257,11 +283,19 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 	// 	TokenType: "Bearer",
 	// 	Token:     token,
 	// }
+	cookieMaxAge := 3600 // Default expiration time of 1 hour
+
+	if remember == "on" {
+		fmt.Println("Onnnnnn")
+		cookieMaxAge = 60 * 60 * 24 * 15 // 15 days in seconds
+	}
+	fmt.Println("Max age", cookieMaxAge)
+
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    token,
-		Expires:  time.Now().Add(time.Hour),
-		MaxAge:   3600,
+		Expires:  time.Now().Add(time.Second * time.Duration(cookieMaxAge)),
+		MaxAge:   cookieMaxAge,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false,
@@ -375,136 +409,3 @@ func GeneratePasswordResetToken(ttl time.Duration, userId int, secretJWTKey stri
 
 	return tokenString, nil
 }
-
-// // Reset Password form
-// func (controller *AuthController) ResetPasswordForm(ctx *gin.Context) {
-// 	token := ctx.Param("token")
-// 	ctx.HTML(http.StatusOK, "resetpassword.html", gin.H{
-// 		"Token": token,
-// 	})
-// }
-
-// // Reset Password
-// func (controller *AuthController) ResetPassword(ctx *gin.Context) {
-// 	tokenSecret := os.Getenv("TOKEN_SECRET")
-// 	password := ctx.PostForm("password")
-// 	confirmPassword := ctx.PostForm("cpassword")
-// 	username := ctx.PostForm("username")
-// 	email := ctx.PostForm("email")
-// 	utype := ctx.PostForm("type")
-// 	phone := ctx.PostForm("phone")
-// 	dob := ctx.PostForm("dob")
-// 	address := ctx.PostForm("address")
-// 	token := ctx.Param("token")
-
-// 	if password == "" {
-// 		ctx.HTML(http.StatusOK, "resetpassword.html", gin.H{
-// 			"Errors": map[string]string{
-// 				"PasswordEmpty": "Password can't be blank.",
-// 			},
-// 		})
-// 		return
-// 	}
-
-// 	if confirmPassword == "" {
-// 		ctx.HTML(http.StatusOK, "resetpassword.html", gin.H{
-// 			"Errors": map[string]string{
-// 				"CPasswordEmpty": "Confirm password can't be blank.",
-// 			},
-// 		})
-// 		return
-// 	}
-
-// 	if password != confirmPassword {
-// 		ctx.HTML(http.StatusOK, "resetpassword.html", gin.H{
-// 			"Errors": map[string]string{
-// 				"NotMatch": "Password and password confirmation not match.",
-// 			},
-// 		})
-// 		return
-// 	}
-// 	// Validate the token
-// 	userId, err := utils.ValidateToken(token, tokenSecret) // Replace tokenSecret with your actual token secret
-// 	uId:=int(useri)
-// 	// Check if token validation failed
-// 	if err != nil {
-// 		ctx.HTML(http.StatusOK, "resetpassword.html", gin.H{
-// 			"Errors": map[string]string{
-// 				"InvalidToken": "Invalid token.",
-// 			},
-// 		})
-// 		return
-// 	}
-// 	// // Update the password in the database using the user ID
-// 	// err = controller.AuthService(userId.(int), password)
-// 	// if err != nil {
-// 	// 	// Handle the error appropriately
-// 	// 	fmt.Println("Failed to update password:", err)
-// 	// 	// Render an error message to the user
-// 	// 	ctx.HTML(http.StatusInternalServerError, "resetpassword.html", gin.H{
-// 	// 		"Errors": map[string]string{
-// 	// 			"ServerError": "An error occurred while updating the password.",
-// 	// 		},
-// 	// 	})
-// 	// 	return
-// 	// }
-// 	var dobTime *time.Time
-// 	if dob != "" {
-// 		parsedDOB, err := time.Parse("2006-01-02", dob)
-// 		if err != nil {
-// 			fmt.Print("Invalid date of birth")
-// 		}
-// 		dobTime = &parsedDOB
-// 	}
-// 	// id, err := strconv.Atoi(userId)
-// 	helper.ErrorPanic(err)
-// 	if method := ctx.Request.Header.Get("X-HTTP-Method-Override"); method == "PUT" {
-// 		ctx.Request.Method = "PUT"
-// 	}
-
-// 	photoFile, err := ctx.FormFile("photo")
-// 	if err != nil && err != http.ErrMissingFile {
-// 		helper.ErrorPanic(err)
-// 	}
-
-// 	var photoPath string
-// 	if photoFile != nil {
-// 		// Generate a unique file name for the photo
-// 		photoFileName := fmt.Sprintf("%d_%s", time.Now().Unix(), photoFile.Filename)
-// 		photoPath = filepath.Join("static", "images", photoFileName)
-
-// 		err := ctx.SaveUploadedFile(photoFile, photoPath)
-// 		if err != nil {
-// 			helper.ErrorPanic(err)
-// 		}
-
-// 		// Convert backslashes to forward slashes
-// 		photoPath = filepath.ToSlash(photoPath)
-// 	}
-
-// 	updateUserRequest := request.UpdateUserRequest{
-// 		Id:            userId,
-// 		Username:      username,
-// 		Email:         email,
-// 		Password:      password,
-// 		Type:          utype,
-// 		Phone:         phone,
-// 		Address:       address,
-// 		UpdateUserId:  userID,
-// 		Date_Of_Birth: dobTime,
-// 		Profile_Photo: photoPath,
-// 	}
-// 	// controller.userService.Update(updateUserRequest)
-// 	// ctx.Redirect(http.StatusFound, "/users")
-
-// 	err = controller.userService.UpdatePassword(updateUserRequest)
-// 	if err != nil {
-// 		return
-// 	}
-// 	ctx.Redirect(http.StatusFound, "/users")
-
-// 	// Password updated successfully
-// 	// Redirect to a success page or display a success message
-// 	ctx.HTML(http.StatusOK, "resetpassword_success.html", gin.H{})
-// 	fmt.Print("This is token : --", token)
-// }
