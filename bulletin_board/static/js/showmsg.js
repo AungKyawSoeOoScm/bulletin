@@ -72,7 +72,8 @@ document.addEventListener("DOMContentLoaded", function () {
 function highlightRow(row) {
   row.style.cursor = "pointer";
   row.style.opacity = "0.8";
-  row.style.backgroundColor = "black"; // Set the background color of the row
+  row.style.t
+  row.style.backgroundColor = "#484349"; // Set the background color of the row
   row.style.color = "white";
 }
 

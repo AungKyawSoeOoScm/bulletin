@@ -25,10 +25,15 @@ func (t *PostsRepositoryImpl) Delete(tagsId int) {
 }
 
 // FindAll implements TagsRepository
-func (t *PostsRepositoryImpl) FindAll() []model.Posts {
+func (t *PostsRepositoryImpl) FindAll(activeOnly bool) []model.Posts {
 	var tags []model.Posts
-	result := t.Db.Find(&tags)
-	helper.ErrorPanic(result.Error)
+	if activeOnly {
+		result := t.Db.Where("status = ?", 1).Find(&tags)
+		helper.ErrorPanic(result.Error)
+	} else {
+		result := t.Db.Find(&tags)
+		helper.ErrorPanic(result.Error)
+	}
 	return tags
 }
 

@@ -12,8 +12,9 @@
                 {{ template "userformcommon.html" . }}
 
                 <button onclick="showUserConfirmation()" type="button"
-                    class="btn btn-primary mt-5 w-25">Create</button>
-                <a class="btn btn-secondary mt-5 w-25" href="/users">Cancel</a>
+                    class="btn btn-primary mt-2 w-25" id="createUserBtn"
+                    disabled>Create</button>
+                <a class="btn btn-secondary mt-2 w-25" href="/users">Cancel</a>
 
             </form>
 
@@ -34,6 +35,7 @@
             </div>
         </div>
         {{ template "footer.html" }}
+        <script src="/static/js/usererror.js"></script>
     </body>
 </html>
 {{ end }}

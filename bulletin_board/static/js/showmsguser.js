@@ -19,7 +19,9 @@ function showUserDetail(
   detailMessage += "Phone: " + phone + "<br>";
   detailMessage += "Date of Birth: " + (dob ? dob : "") + "<br>";
   detailMessage += "Address: " + address + "<br>";
-  var create_part = created_date.split(" ")[0];
+  if (created_date) {
+    var create_part = created_date.split(" ")[0];
+  }
   detailMessage += "Created Date: " + create_part + "<br>";
   detailMessage += "Created User: " + createdBy + "<br>";
   var update_part = updated_date.split(" ")[0];

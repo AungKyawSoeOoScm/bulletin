@@ -18,14 +18,8 @@
                 <input type="hidden" class="form-control" name="_method"
                     value="PUT">
                 {{ template "userformcommon.html" . }}
-
-                <!-- <img src="/static/images/1685025554_a2.png" alt="Profile Photo"> -->
-                <!-- <label for="ophoto" class="mt-3">Current Photo</label> -->
-                <!-- <img src="/{{ .User.Profile_Photo }}" class="pphoto"
-                    alt="Profile Photo" name="ophoto" id="currentPhoto"> -->
-
                 <button onclick="showUserConfirmation()" type="button"
-                    class="btn btn-primary mt-2 w-25">Edit</button>
+                    class="btn btn-primary mt-2 w-25" id="updateUserBtn">Edit</button>
                 <a href="/users" class="btn btn-secondary mt-2 w-25">Cancel</a>
             </form>
 
@@ -46,6 +40,7 @@
             </div>
         </div>
         {{ template "footer.html" }}
+        <script src="/static/js/usererror.js"></script>
     </body>
     <script>
         function confirmUserUpdate() {

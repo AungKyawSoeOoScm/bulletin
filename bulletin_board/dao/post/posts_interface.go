@@ -7,6 +7,6 @@ type PostsInterface interface {
 	Update(tags model.Posts) error
 	Delete(tagsId int)
 	FindById(tagsId int) (tags model.Posts, err error)
-	FindAll() []model.Posts
+	FindAll(activeOnly bool) []model.Posts
 	FindPostByUserId(userId int) (posts []model.Posts, err error)
 }

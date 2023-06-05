@@ -381,12 +381,17 @@ func (controller *AuthController) ForgetPassword(ctx *gin.Context) {
 		// Handle the error appropriately
 		fmt.Println("Failed to send email:", err)
 		// Render an error message to the user
-		ctx.HTML(http.StatusInternalServerError, "error.html", gin.H{
+		ctx.HTML(http.StatusInternalServerError, "forgetpassword.html", gin.H{
 			"ErrorMessage": "Failed to send email.",
 		})
 		return
 	}
-	ctx.Redirect(http.StatusFound, "/forgetpassword")
+	ctx.HTML(http.StatusFound, "forgetpassword.html", gin.H{
+		"Msg": map[string]string{
+			"emailSend": "Check your email to proceed forget password",
+		},
+	})
+
 }
 
 func GeneratePasswordResetToken(ttl time.Duration, userId int, secretJWTKey string) (string, error) {

@@ -121,14 +121,14 @@ a {
 .pf-container {
     position: relative;
     border-radius: 5px;
-    margin: 150px auto 10px;
+    margin: 280px auto 10px;
     padding: 50px 3px 30px;
     width: 50%;
     box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
 
     .i-con {
         margin-left: 1%;
-        margin-top: 10%;
+        margin-top: 15%;
         letter-spacing: 1px;
         text-align: center;
         color: #5e5a5a;
@@ -214,5 +214,91 @@ a {
 }
 
 .mt-3.fgp {
-    margin-left: 62%;
+    margin-left: 55% !important;
+}
+
+.datatable-container .dataTables_length,
+.datatable-container .dataTables_filter {
+    display: none;
+}
+
+div.dataTables_wrapper div.dataTables_length select {
+    width: auto;
+    display: none !important;
+}
+
+// #postTable thead th.sorting:before {
+//   right: auto;
+//   left: -5px; /* Adjust the value as needed */
+// }
+#postTable thead th.sorting_asc:before,
+#postTable thead th.sorting:before {
+    left: 105px;
+}
+
+#postTable thead th.sorting:nth-child(1)::before {
+    left: 75px;
+}
+
+#postTable thead th.sorting:nth-child(1)::after {
+    left: 79px;
+}
+
+#postTable thead th.sorting:nth-child(2)::before {
+    left: 50px;
+}
+
+#postTable thead th.sorting:nth-child(2)::after {
+    left: 54px;
+}
+
+
+
+#postTable thead th.sorting_asc::after,
+#postTable thead th.sorting:after {
+    left: 109px;
+}
+
+#userTable thead th.sorting_asc:before,
+#userTable thead th.sorting:before {
+    left: 113px;
+}
+
+#userTable thead th.sorting_asc::after,
+#userTable thead th.sorting:after {
+    left: 117px;
+}
+
+#userTable thead th.sorting:nth-child(1):before {
+    left: 75px;
+}
+
+#userTable thead th.sorting:nth-child(1):after {
+    left: 79px;
+}
+
+#userTable thead th.sorting:nth-child(4):before {
+    left: 70px;
+}
+
+#userTable thead th.sorting:nth-child(4):after {
+    left: 74px;
+}
+
+
+
+#userTable thead th.sorting:nth-child(3)::after {
+    left: 60px;
+}
+
+#userTable thead th.sorting:nth-child(3)::before {
+    left: 56px;
+}
+
+#userTable thead th.sorting:nth-child(6)::before {
+    left: 76px;
+}
+
+#userTable thead th.sorting:nth-child(6)::after {
+    left: 80px;
 }

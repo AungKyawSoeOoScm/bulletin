@@ -23,10 +23,7 @@ func init() {
 func main() {
 	log.Info().Msg("Server Started")
 
-	// db := config.ConnectDatabase()
 	validate := validator.New()
-	// db.Table("posts").AutoMigrate(&model.Posts{})
-	// db.Table("users").AutoMigrate(&model.User{})
 
 	// User interface
 	userInterface := interfaces.NewUsersInterfaceImpl(config.DB)

@@ -8,7 +8,16 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet"
+      href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet"
+      href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
+    <script
+      src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
     <script>
+      
       function sendDelete(event, href, id, title, description, status) {
         event.preventDefault();
         confirmDelete(id, title, description, status).then((result) => {
@@ -49,7 +58,8 @@
     </script>
 
     <a href="/users/create" class="btn btn-primary mt-5 ms-3">Create User</a>
-    <div class="search-container usearch" style="z-index:100;margin-right: 30px;">
+    <div class="search-container usearch"
+      style="z-index:100;margin-right: 30px;">
       <input
         type="text"
         id="searchInputUser"
@@ -82,11 +92,12 @@
     <button class="btn btn-secondary text-white clearDatebtn"
       onclick="clearDate()" style="display: none;" id="clear-date-btn">Clear
       Date</button>
-    <div class="container-fluid userCon">
-      <table id="userTable" class="table .table-responsive bs-table">
+    <div class="container-fluid userCon datatable-container">
+      <table id="userTable" class="table .table-responsive bs-table"
+        style="margin-top: 100px;">
         <thead>
           <tr class="user-tr">
-            <th scope="col">No</th>
+            <th scope="col">Number</th>
             <th scope="col">Created User</th>
             <th scope="col">Type</th>
             <th scope="col">Phone</th>
@@ -94,7 +105,7 @@
             <th scope="col">Address</th>
             <th scope="col">Created_date</th>
             <th scope="col">Updated_date</th>
-            <th scope="col">Operation</th>
+            <th scope="col" data-orderable="false">Operation</th>
           </tr>
         </thead>
         <tbody>
@@ -173,6 +184,23 @@
         .getElementById("date-search")
 
         date.addEventListener("click", searchByDate);
+
+        $(document).ready(function() {
+  $('#userTable').DataTable({
+    "paging": true, // Enable pagination
+    "pageLength": 7, // Number of rows per page
+    "pagingType": "full_numbers", // Use full_numbers pagination style
+    "language": {
+      "paginate": {
+        "first": "&laquo;",
+        "previous": "&lsaquo;",
+        "next": "&rsaquo;",
+        "last": "&raquo;"
+      },
+    },
+  });
+});
+
     </script>
   </body>
 </html>

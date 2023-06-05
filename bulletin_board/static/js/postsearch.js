@@ -7,8 +7,8 @@ function search() {
   var foundPosts = 0;
 
   for (var i = 0; i < rows.length; i++) {
-    var titleCell = rows[i].getElementsByTagName("td")[0];
-    var descriptionCell = rows[i].getElementsByTagName("td")[1];
+    var titleCell = rows[i].getElementsByTagName("td")[1];
+    var descriptionCell = rows[i].getElementsByTagName("td")[2];
     if (titleCell || descriptionCell) {
       var title = titleCell.textContent.toLowerCase();
       var description = descriptionCell.textContent.toLowerCase();

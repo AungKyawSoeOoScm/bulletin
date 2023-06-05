@@ -11,5 +11,5 @@ type PostsService interface {
 	Delete(tagsId int)
 	FindById(tagsId int) response.PostResponse
 	FindPostByUserId(userId int) []response.PostResponse
-	FindAll() []response.PostResponse
+	FindAll(activeOnly bool) []response.PostResponse
 }

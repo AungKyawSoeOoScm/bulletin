@@ -4,3 +4,5 @@ github.com/joho/godotenv
 
 go run github.com/githubnemo/CompileDaemon (run CompileDaemon)
 go run migrate/migrate.go (to first migrate table)
+
+Run -> go get . (to get all installed packages)

@@ -88,8 +88,8 @@ func (t *PostsServiceImpl) Delete(tagsId int) {
 }
 
 // FindAll implements TagsService
-func (t *PostsServiceImpl) FindAll() []response.PostResponse {
-	result := t.postsInterface.FindAll()
+func (t *PostsServiceImpl) FindAll(activeOnly bool) []response.PostResponse {
+	result := t.postsInterface.FindAll(activeOnly)
 	var tags []response.PostResponse
 	for _, value := range result {
 		creator := t.userService.FindById(value.CreateUserId)
@@ -136,13 +136,6 @@ func (t *PostsServiceImpl) FindById(tagsId int) response.PostResponse {
 
 // Update implements TagsService
 func (t *PostsServiceImpl) Update(posts request.UpdatePostsRequest, userId int) error {
-	// err := t.validate.Struct(posts)
-	// if err != nil {
-	// 	if validationErrs, ok := err.(validator.ValidationErrors); ok {
-	// 		return validationErrs
-	// 	}
-	// 	return err
-	// }
 	postData, err := t.postsInterface.FindById(posts.Id)
 	helper.ErrorPanic(err)
 	postData.Title = posts.Title

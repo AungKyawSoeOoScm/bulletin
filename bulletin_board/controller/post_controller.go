@@ -10,7 +10,6 @@ import (
 	"gin_test/bulletin_board/model"
 	service "gin_test/bulletin_board/service/post"
 	uservice "gin_test/bulletin_board/service/user"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -38,6 +37,8 @@ func NewPostsController(service service.PostsService, uservice uservice.UserServ
 
 // create controller
 func (controller *PostController) Create(ctx *gin.Context, userId int) {
+	isLoggedIn := getIsLoggedIn(ctx)
+	currentUser := controller.userService.FindById(userId)
 	title := ctx.PostForm("title")
 	description := ctx.PostForm("description")
 
@@ -49,9 +50,9 @@ func (controller *PostController) Create(ctx *gin.Context, userId int) {
 	fmt.Print(userId)
 	fmt.Print(createTagsRequest)
 	// ctx.HTML(http.StatusOK, "createConfirm.html", gin.H{})
-	err := controller.tagsService.Create(createTagsRequest, userId)
-	if err != nil {
-		if validationErr, ok := err.(validator.ValidationErrors); ok {
+	terr := controller.tagsService.Create(createTagsRequest, userId)
+	if terr != nil {
+		if validationErr, ok := terr.(validator.ValidationErrors); ok {
 			errorMessages := make(map[string]string)
 			for _, fieldErr := range validationErr {
 				fieldName := fieldErr.Field()
@@ -70,7 +71,9 @@ func (controller *PostController) Create(ctx *gin.Context, userId int) {
 			}
 
 			ctx.HTML(http.StatusBadRequest, "create.html", gin.H{
-				"Errors": errorMessages,
+				"IsLoggedIn":  isLoggedIn,
+				"CurrentUser": currentUser,
+				"Errors":      errorMessages,
 			})
 			return
 		}
@@ -230,7 +233,7 @@ func (controller *PostController) FindAll(ctx *gin.Context) {
 	if userID != 0 {
 		currentUser := controller.userService.FindById(userID)
 		if currentUser.Type == "1" {
-			tagResponse = controller.tagsService.FindAll()
+			tagResponse = controller.tagsService.FindAll(false)
 		} else {
 			tagResponse = controller.tagsService.FindPostByUserId(userID)
 		}
@@ -244,7 +247,7 @@ func (controller *PostController) FindAll(ctx *gin.Context) {
 	}
 
 	// If userID is 0 (no user logged in), retrieve all tags without currentUser
-	tagResponse = controller.tagsService.FindAll()
+	tagResponse = controller.tagsService.FindAll(true)
 
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
 		"tags":       tagResponse,
@@ -455,7 +458,7 @@ func (controller *PostController) DownloadPosts(ctx *gin.Context, db *gorm.DB) {
 	}
 
 	// Create a temporary file to write the CSV data
-	tempFile, err := ioutil.TempFile("", "table_data_*.csv")
+	tempFile, err := os.CreateTemp("", "table_data_*.csv")
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error creating temporary file: %s", err.Error()))
 		return
@@ -477,7 +480,7 @@ func (controller *PostController) DownloadPosts(ctx *gin.Context, db *gorm.DB) {
 	}
 
 	// Read the contents of the temporary file
-	fileContents, err := ioutil.ReadFile(tempFile.Name())
+	fileContents, err := os.ReadFile(tempFile.Name())
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Error reading file contents: %s", err.Error()))
 		return
